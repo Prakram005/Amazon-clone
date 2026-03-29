@@ -9,23 +9,91 @@ const reviewOptions = ['5 stars', '4 stars & up', '3 stars & up']
 const promoCards = [
   {
     title: 'Appliances for your home',
-    items: ['Air conditioners', 'Refrigerators', 'Microwaves', 'Washing machines'],
     category: 'Home',
+    items: [
+      {
+        label: 'Air conditioners',
+        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Refrigerators',
+        image: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Microwaves',
+        image: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Washing machines',
+        image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=700&q=80',
+      },
+    ],
   },
   {
     title: 'Revamp your home in style',
-    items: ['Cushion covers', 'Figurines', 'Storage', 'Lighting'],
     category: 'Home',
+    items: [
+      {
+        label: 'Cushion covers',
+        image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Figurines',
+        image: 'https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Storage',
+        image: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Lighting',
+        image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80',
+      },
+    ],
   },
   {
     title: 'Starting Rs 199 | Fashion picks',
-    items: ['T-shirts', 'Shoes', 'Bags', 'Watches'],
     category: 'Fashion',
+    items: [
+      {
+        label: 'T-shirts',
+        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Shoes',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Bags',
+        image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Watches',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=80',
+      },
+    ],
   },
   {
     title: 'Shop top electronics',
-    items: ['Mobiles', 'Headphones', 'Watches', 'Laptops'],
     category: 'Electronics',
+    items: [
+      {
+        label: 'Mobiles',
+        image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Headphones',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Watches',
+        image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=700&q=80',
+      },
+      {
+        label: 'Laptops',
+        image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=700&q=80',
+      },
+    ],
   },
 ]
 
@@ -109,13 +177,18 @@ const ProductsPage = () => {
           <button
             key={card.title}
             onClick={() => updateFilters('', card.category)}
-            className="bg-white p-5 text-left shadow-sm"
+            className="bg-white p-5 text-left shadow-sm transition hover:shadow-md"
           >
             <h2 className="text-[21px] font-bold leading-7 text-slate-900">{card.title}</h2>
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-700">
               {card.items.map((item) => (
-                <div key={item} className="min-h-[90px] bg-[#f7f8f8] p-3">
-                  {item}
+                <div key={item.label} className="space-y-2">
+                  <img
+                    src={item.image}
+                    alt={item.label}
+                    className="h-28 w-full object-cover"
+                  />
+                  <p>{item.label}</p>
                 </div>
               ))}
             </div>
