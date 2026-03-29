@@ -1,18 +1,44 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getCategories, getProducts } from '../api'
 import Loader from '../components/Loader'
 import ProductCard from '../components/ProductCard'
 
 const reviewOptions = ['5 stars', '4 stars & up', '3 stars & up']
 
+const promoCards = [
+  {
+    title: 'Appliances for your home',
+    items: ['Air conditioners', 'Refrigerators', 'Microwaves', 'Washing machines'],
+    category: 'Home',
+  },
+  {
+    title: 'Revamp your home in style',
+    items: ['Cushion covers', 'Figurines', 'Storage', 'Lighting'],
+    category: 'Home',
+  },
+  {
+    title: 'Starting Rs 199 | Fashion picks',
+    items: ['T-shirts', 'Shoes', 'Bags', 'Watches'],
+    category: 'Fashion',
+  },
+  {
+    title: 'Shop top electronics',
+    items: ['Mobiles', 'Headphones', 'Watches', 'Laptops'],
+    category: 'Electronics',
+  },
+]
+
 const ProductsPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('All')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+
+  const search = searchParams.get('search') || ''
+  const category = searchParams.get('category') || 'All'
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -50,6 +76,20 @@ const ProductsPage = () => {
 
   const featuredProducts = useMemo(() => products.slice(0, 4), [products])
 
+  const updateFilters = (nextSearch = search, nextCategory = category) => {
+    const params = new URLSearchParams()
+
+    if (nextSearch.trim()) {
+      params.set('search', nextSearch.trim())
+    }
+
+    if (nextCategory !== 'All') {
+      params.set('category', nextCategory)
+    }
+
+    setSearchParams(params)
+  }
+
   return (
     <div className="space-y-4 pb-8">
       <section className="relative overflow-hidden bg-gradient-to-b from-[#c9e8f6] via-[#dfeff5] to-[#e3e6e6] px-4 pb-32 pt-10 sm:px-6 lg:px-8">
@@ -65,57 +105,42 @@ const ProductsPage = () => {
       </section>
 
       <section className="-mt-28 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="bg-white p-5 shadow-sm">
-          <h2 className="text-[21px] font-bold leading-7 text-slate-900">Appliances for your home</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-700">
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Air conditioners</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Refrigerators</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Microwaves</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Washing machines</div>
-          </div>
-        </div>
-        <div className="bg-white p-5 shadow-sm">
-          <h2 className="text-[21px] font-bold leading-7 text-slate-900">Revamp your home in style</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-700">
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Cushion covers</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Figurines</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Storage</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Lighting</div>
-          </div>
-        </div>
-        <div className="bg-white p-5 shadow-sm">
-          <h2 className="text-[21px] font-bold leading-7 text-slate-900">Starting Rs 199 | Fashion picks</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-700">
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">T-shirts</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Shoes</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Bags</div>
-            <div className="min-h-[90px] bg-[#f7f8f8] p-3">Watches</div>
-          </div>
-        </div>
-        <div className="bg-white p-5 shadow-sm">
-          <h2 className="text-[21px] font-bold leading-7 text-slate-900">Easy checkout for this project</h2>
-          <p className="mt-4 text-sm leading-6 text-slate-700">
-            Browse products, add items to the cart, place an order, and review order history with a UI tuned to feel much closer to a real ecommerce marketplace.
-          </p>
-        </div>
+        {promoCards.map((card) => (
+          <button
+            key={card.title}
+            onClick={() => updateFilters('', card.category)}
+            className="bg-white p-5 text-left shadow-sm"
+          >
+            <h2 className="text-[21px] font-bold leading-7 text-slate-900">{card.title}</h2>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-700">
+              {card.items.map((item) => (
+                <div key={item} className="min-h-[90px] bg-[#f7f8f8] p-3">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </button>
+        ))}
       </section>
 
       {featuredProducts.length > 0 ? (
         <section className="bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-[21px] font-bold text-slate-900">Featured picks for you</h2>
-            <p className="text-sm text-[#007185]">See all deals</p>
+            <button onClick={() => updateFilters('', 'All')} className="text-sm text-[#007185]">
+              See all deals
+            </button>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {featuredProducts.map((product) => (
-              <div key={`featured-${product._id}`} className="border border-slate-200 p-3">
+              <Link key={`featured-${product._id}`} to={`/product/${product._id}`} className="border border-slate-200 p-3">
                 <img
                   src={product.images?.[0] || product.image}
                   alt={product.name}
                   className="h-40 w-full object-cover"
                 />
                 <p className="mt-3 line-clamp-2 text-sm text-slate-800">{product.name}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -131,7 +156,7 @@ const ProductsPage = () => {
               type="text"
               placeholder="Search products"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => updateFilters(event.target.value, category)}
               className="mt-2 w-full rounded-sm border border-slate-400 px-3 py-2 outline-none focus:border-[#f3a847]"
             />
           </div>
@@ -144,7 +169,7 @@ const ProductsPage = () => {
                   <input
                     type="radio"
                     checked={category === item}
-                    onChange={() => setCategory(item)}
+                    onChange={() => updateFilters(search, item)}
                     className="h-4 w-4 accent-[#ff9900]"
                   />
                   <span>{item}</span>
