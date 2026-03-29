@@ -1,104 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getCategories, getProducts } from '../api'
+import { addToCart, getCategories, getProducts } from '../api'
 import Loader from '../components/Loader'
 import ProductCard from '../components/ProductCard'
 
 const reviewOptions = ['5 stars', '4 stars & up', '3 stars & up']
 
-const promoCards = [
-  {
-    title: 'Appliances for your home',
-    category: 'Home',
-    items: [
-      {
-        label: 'Air conditioners',
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Refrigerators',
-        image: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Microwaves',
-        image: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Washing machines',
-        image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=700&q=80',
-      },
-    ],
-  },
-  {
-    title: 'Revamp your home in style',
-    category: 'Home',
-    items: [
-      {
-        label: 'Cushion covers',
-        image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Figurines',
-        image: 'https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Storage',
-        image: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Lighting',
-        image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80',
-      },
-    ],
-  },
-  {
-    title: 'Starting Rs 199 | Fashion picks',
-    category: 'Fashion',
-    items: [
-      {
-        label: 'T-shirts',
-        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Shoes',
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Bags',
-        image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Watches',
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=80',
-      },
-    ],
-  },
-  {
-    title: 'Shop top electronics',
-    category: 'Electronics',
-    items: [
-      {
-        label: 'Mobiles',
-        image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Headphones',
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Watches',
-        image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=700&q=80',
-      },
-      {
-        label: 'Laptops',
-        image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=700&q=80',
-      },
-    ],
-  },
+const promoSections = [
+  { title: 'Appliances for your home', category: 'Home' },
+  { title: 'Revamp your home in style', category: 'Home' },
+  { title: 'Starting Rs 199 | Fashion picks', category: 'Fashion' },
+  { title: 'Shop top electronics', category: 'Electronics' },
 ]
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [allProducts, setAllProducts] = useState([])
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -111,8 +28,13 @@ const ProductsPage = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const categoriesResponse = await getCategories()
+        const [categoriesResponse, allProductsResponse] = await Promise.all([
+          getCategories(),
+          getProducts(),
+        ])
+
         setCategories(['All', ...categoriesResponse.data])
+        setAllProducts(allProductsResponse.data)
       } catch {
         setCategories(['All'])
       }
@@ -144,6 +66,19 @@ const ProductsPage = () => {
 
   const featuredProducts = useMemo(() => products.slice(0, 4), [products])
 
+  const promoCards = useMemo(() => {
+    return promoSections.map((section) => {
+      const sectionProducts = allProducts
+        .filter((item) => item.category === section.category)
+        .slice(0, 4)
+
+      return {
+        ...section,
+        items: sectionProducts,
+      }
+    })
+  }, [allProducts])
+
   const updateFilters = (nextSearch = search, nextCategory = category) => {
     const params = new URLSearchParams()
 
@@ -156,6 +91,15 @@ const ProductsPage = () => {
     }
 
     setSearchParams(params)
+  }
+
+  const handleQuickAdd = async (product) => {
+    try {
+      await addToCart(product._id, 1)
+      setMessage(`${product.name} added to cart`)
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Could not add product to cart')
+    }
   }
 
   return (
@@ -174,25 +118,40 @@ const ProductsPage = () => {
 
       <section className="-mt-28 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {promoCards.map((card) => (
-          <button
-            key={card.title}
-            onClick={() => updateFilters('', card.category)}
-            className="bg-white p-5 text-left shadow-sm transition hover:shadow-md"
-          >
-            <h2 className="text-[21px] font-bold leading-7 text-slate-900">{card.title}</h2>
+          <div key={card.title} className="bg-white p-5 text-left shadow-sm transition hover:shadow-md">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-[21px] font-bold leading-7 text-slate-900">{card.title}</h2>
+              <button
+                onClick={() => updateFilters('', card.category)}
+                className="shrink-0 text-xs text-[#007185] hover:underline"
+              >
+                See more
+              </button>
+            </div>
+
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-700">
               {card.items.map((item) => (
-                <div key={item.label} className="space-y-2">
-                  <img
-                    src={item.image}
-                    alt={item.label}
-                    className="h-28 w-full object-cover"
-                  />
-                  <p>{item.label}</p>
+                <div key={item._id} className="space-y-2">
+                  <Link to={`/product/${item._id}`} className="block">
+                    <img
+                      src={item.images?.[0] || item.image}
+                      alt={item.name}
+                      className="h-28 w-full object-cover"
+                    />
+                  </Link>
+                  <Link to={`/product/${item._id}`} className="line-clamp-2 block hover:text-[#c7511f]">
+                    {item.name}
+                  </Link>
+                  <button
+                    onClick={() => handleQuickAdd(item)}
+                    className="rounded-full bg-[#ffd814] px-3 py-1 text-xs text-slate-900 hover:bg-[#f7ca00]"
+                  >
+                    Add to Cart
+                  </button>
                 </div>
               ))}
             </div>
-          </button>
+          </div>
         ))}
       </section>
 
@@ -206,14 +165,24 @@ const ProductsPage = () => {
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {featuredProducts.map((product) => (
-              <Link key={`featured-${product._id}`} to={`/product/${product._id}`} className="border border-slate-200 p-3">
-                <img
-                  src={product.images?.[0] || product.image}
-                  alt={product.name}
-                  className="h-40 w-full object-cover"
-                />
-                <p className="mt-3 line-clamp-2 text-sm text-slate-800">{product.name}</p>
-              </Link>
+              <div key={`featured-${product._id}`} className="border border-slate-200 p-3">
+                <Link to={`/product/${product._id}`}>
+                  <img
+                    src={product.images?.[0] || product.image}
+                    alt={product.name}
+                    className="h-40 w-full object-cover"
+                  />
+                  <p className="mt-3 line-clamp-2 text-sm text-slate-800 hover:text-[#c7511f]">
+                    {product.name}
+                  </p>
+                </Link>
+                <button
+                  onClick={() => handleQuickAdd(product)}
+                  className="mt-3 rounded-full bg-[#ffd814] px-4 py-2 text-sm text-slate-900 hover:bg-[#f7ca00]"
+                >
+                  Add to Cart
+                </button>
+              </div>
             ))}
           </div>
         </section>
