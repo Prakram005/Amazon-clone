@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { addToCart, getCategories, getProducts } from '../api'
+import { addToCart, getProducts } from '../api'
 import Loader from '../components/Loader'
 import ProductCard from '../components/ProductCard'
 
@@ -26,42 +26,41 @@ const ProductsPage = () => {
   const category = searchParams.get('category') || 'All'
 
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadProducts = async () => {
       try {
-        const [categoriesResponse, allProductsResponse] = await Promise.all([
-          getCategories(),
-          getProducts(),
-        ])
+        setLoading(true)
+        setError('')
 
-        setCategories(['All', ...categoriesResponse.data])
-        setAllProducts(allProductsResponse.data)
-      } catch {
+        const shouldFetchAllProducts = !search.trim() && category === 'All'
+        const response = shouldFetchAllProducts
+          ? await getProducts()
+          : await getProducts({ search, category })
+
+        const nextProducts = response.data
+        setProducts(nextProducts)
+
+        if (shouldFetchAllProducts) {
+          setAllProducts(nextProducts)
+        }
+
+        const uniqueCategories = [...new Set(nextProducts.map((item) => item.category).filter(Boolean))]
+        setCategories((currentCategories) => {
+          if (currentCategories.length > 1 && !shouldFetchAllProducts) {
+            return currentCategories
+          }
+
+          return ['All', ...uniqueCategories]
+        })
+      } catch (err) {
+        setProducts([])
         setCategories(['All'])
+        setError(err.response?.data?.message || 'Could not load products')
+      } finally {
+        setLoading(false)
       }
     }
 
-    loadInitialData()
-  }, [])
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const loadProducts = async () => {
-        try {
-          setLoading(true)
-          setError('')
-          const response = await getProducts({ search, category })
-          setProducts(response.data)
-        } catch (err) {
-          setError(err.response?.data?.message || 'Could not load products')
-        } finally {
-          setLoading(false)
-        }
-      }
-
-      loadProducts()
-    }, 250)
-
-    return () => clearTimeout(timeout)
+    loadProducts()
   }, [search, category])
 
   const featuredProducts = useMemo(() => products.slice(0, 4), [products])

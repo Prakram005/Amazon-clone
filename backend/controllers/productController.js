@@ -5,6 +5,8 @@ exports.getProducts = async (req, res) => {
   try {
     const { search = "", category = "" } = req.query;
     const query = {};
+    const productListFields =
+      "name price category image images brand rating numReviews stock createdAt";
 
     if (search) {
       query.name = { $regex: search, $options: "i" };
@@ -14,7 +16,10 @@ exports.getProducts = async (req, res) => {
       query.category = category;
     }
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const products = await Product.find(query)
+      .select(productListFields)
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
